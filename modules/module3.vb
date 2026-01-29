@@ -6,12 +6,16 @@ Public Const COL_DIA_FIN As Long = 37     ' AK = día 31
 Public Const SHEET_CONTROL As String = "tabla_control"
 Public Const SHEET_TAREAS As String = "tareas"
 Public Const TABLE_TAREAS_NAME As String = "tareas"
+' --- Hoja / tabla puente (personal_tareas)
+Public Const SHEET_PT As String = "personal_tareas"      ' nombre de la hoja donde está la tabla puente
+Public Const TABLE_PT_NAME As String = "personal_tareas" ' nombre del ListObject de la tabla puente
+
 
 ' --- Actualizar FECHA INICIO / FECHA FINAL / PORCENTAJE en la tabla "tareas"
 Public Sub ActualizarTareaOrigen(tareaId As Long, fechaIni As Variant, fechaFin As Variant, sumaPorc As Double)
     Dim wsT As Worksheet
     Dim tbl As ListObject
-    Dim rngID As Range
+    Dim rngId As Range
     Dim filaTbl As Range
     Dim idxFechaIni As Long, idxFechaFin As Long, idxPorc As Long
 
@@ -19,8 +23,8 @@ Public Sub ActualizarTareaOrigen(tareaId As Long, fechaIni As Variant, fechaFin 
     Set wsT = ThisWorkbook.Worksheets(SHEET_TAREAS)
     Set tbl = wsT.ListObjects(TABLE_TAREAS_NAME)
 
-    Set rngID = tbl.ListColumns("tarea_id").DataBodyRange
-    Set filaTbl = rngID.Find(What:=tareaId, LookAt:=xlWhole)
+    Set rngId = tbl.ListColumns("tarea_id").DataBodyRange
+    Set filaTbl = rngId.Find(What:=tareaId, LookAt:=xlWhole)
 
     If filaTbl Is Nothing Then Exit Sub
 
@@ -38,10 +42,10 @@ ErrHandler:
 End Sub
 
 ' --- Actualiza la columna del día (1..31) en la tabla "tareas"
-Public Sub ActualizarDiaEnTablaOrigen(tareaId As Long, dia As Long, valor As Double)
+Public Sub ActualizarDiaEnTablaOrigen(tareaId As Long, dia As Long, valor As Variant)
     Dim wsT As Worksheet
     Dim tbl As ListObject
-    Dim rngID As Range
+    Dim rngId As Range
     Dim filaTbl As Range
     Dim colName As String
     Dim idxCol As Long
@@ -52,27 +56,34 @@ Public Sub ActualizarDiaEnTablaOrigen(tareaId As Long, dia As Long, valor As Dou
     Set wsT = ThisWorkbook.Worksheets(SHEET_TAREAS)
     Set tbl = wsT.ListObjects(TABLE_TAREAS_NAME)
 
-    Set rngID = tbl.ListColumns("tarea_id").DataBodyRange
-    Set filaTbl = rngID.Find(What:=tareaId, LookAt:=xlWhole)
+    Set rngId = tbl.ListColumns("tarea_id").DataBodyRange
+    Set filaTbl = rngId.Find(What:=tareaId, LookAt:=xlWhole)
 
     If filaTbl Is Nothing Then Exit Sub
 
     colName = CStr(dia) ' columnas "1","2",...
     idxCol = tbl.ListColumns(colName).Index
 
-    filaTbl.Offset(0, idxCol - 1).Value = valor
+    With filaTbl.Offset(0, idxCol - 1)
+        If IsMissing(valor) Or IsEmpty(valor) Or Trim(CStr(valor)) = "" Then
+            .ClearContents
+        Else
+            .Value = CDbl(valor)
+        End If
+    End With
 
     Exit Sub
 ErrHandler:
     MsgBox "Error en ActualizarDiaEnTablaOrigen: " & Err.Description, vbExclamation
 End Sub
 
+
 ' --- Recalcula FECHA INICIO / FECHA FINAL / PORCENTAJE leyendo directamente la fila de la tabla "tareas"
 ' devuelve por referencia fechaIni, fechaFin, sumaPorc (suma en porcentaje 0..100)
 Public Sub RecalcularTareaEnTabla(tareaId As Long, ByRef fechaIni As Variant, ByRef fechaFin As Variant, ByRef sumaPorc As Double)
     Dim wsT As Worksheet
     Dim tbl As ListObject
-    Dim rngID As Range
+    Dim rngId As Range
     Dim filaTbl As Range
     Dim rowIndex As Long
     Dim dia As Long
@@ -87,8 +98,8 @@ Public Sub RecalcularTareaEnTabla(tareaId As Long, ByRef fechaIni As Variant, By
     Set wsT = ThisWorkbook.Worksheets(SHEET_TAREAS)
     Set tbl = wsT.ListObjects(TABLE_TAREAS_NAME)
 
-    Set rngID = tbl.ListColumns("tarea_id").DataBodyRange
-    Set filaTbl = rngID.Find(What:=tareaId, LookAt:=xlWhole)
+    Set rngId = tbl.ListColumns("tarea_id").DataBodyRange
+    Set filaTbl = rngId.Find(What:=tareaId, LookAt:=xlWhole)
 
     If filaTbl Is Nothing Then Exit Sub
 
@@ -153,17 +164,17 @@ Public Function ColorFromName(colorName As String) As Long
         Case "rojo"
             ColorFromName = RGB(255, 0, 0)          ' Guardia entrante
         Case "naranja"
-            ColorFromName = RGB(255, 165, 0)        ' Guardia saliente
+            ColorFromName = RGB(255, 192, 0)        ' Guardia saliente
         Case "celeste"
-            ColorFromName = RGB(173, 216, 230)      ' Vacación (light blue)
+            ColorFromName = RGB(0, 176, 240)      ' Vacación (light blue)
         Case "verde oscuro"
-            ColorFromName = RGB(0, 100, 0)          ' Comisión Vuelo (dark green)
+            ColorFromName = RGB(196, 215, 155)          ' Comisión Vuelo (dark green)
         Case "gris"
-            ColorFromName = RGB(200, 200, 200)      ' Comisión varios (grey)
+            ColorFromName = RGB(221, 297, 196)      ' Comisión varios (grey)
         Case "verde claro"
-            ColorFromName = RGB(144, 238, 144)      ' Día de permiso (light green)
+            ColorFromName = RGB(0, 255, 0)      ' Día de permiso (light green)
         Case "café", "cafe", "café "
-            ColorFromName = RGB(139, 69, 19)        ' Otros (brown)
+            ColorFromName = RGB(151, 71, 6)        ' Otros (brown)
         Case Else
             ColorFromName = xlNone                  ' sin color por defecto
     End Select
@@ -173,7 +184,7 @@ End Function
 Public Sub AplicarColorDiaEnTablaOrigen(tareaId As Long, dia As Long, colorLong As Long)
     Dim wsT As Worksheet
     Dim tbl As ListObject
-    Dim rngID As Range
+    Dim rngId As Range
     Dim filaTbl As Range
     Dim idxCol As Long
     Dim cel As Range
@@ -184,8 +195,8 @@ Public Sub AplicarColorDiaEnTablaOrigen(tareaId As Long, dia As Long, colorLong 
     Set wsT = ThisWorkbook.Worksheets(SHEET_TAREAS)
     Set tbl = wsT.ListObjects(TABLE_TAREAS_NAME)
 
-    Set rngID = tbl.ListColumns("tarea_id").DataBodyRange
-    Set filaTbl = rngID.Find(What:=tareaId, LookAt:=xlWhole)
+    Set rngId = tbl.ListColumns("tarea_id").DataBodyRange
+    Set filaTbl = rngId.Find(What:=tareaId, LookAt:=xlWhole)
 
     If filaTbl Is Nothing Then Exit Sub
 

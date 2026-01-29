@@ -4,6 +4,7 @@ TO DO
 
 - Macro de agregar tarea, colocando el nombre y personas asignadas.
 - Macro de agregar persona, con los datos de: Grado, Apellidos y Nombres, Cargo y Especialidad.
+- Al editar tarea agregar la opción de personas designadas a la tarea.
 
 DOING
 

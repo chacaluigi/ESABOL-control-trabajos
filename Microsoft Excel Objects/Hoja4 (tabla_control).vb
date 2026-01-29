@@ -17,10 +17,13 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
         .txtPorcentaje.Value = pct
         ' inicializar campo fecha vacío (usuario elegirá)
         .txtFecha.Value = ""
+        ' cargar totales y estado desde la tabla origen
+        .SetupFromSheet
         .Show
     End With
 
 End Sub
+
 
 Private Sub Worksheet_Change(ByVal Target As Range)
 
