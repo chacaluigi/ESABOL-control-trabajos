@@ -54,20 +54,41 @@ Private Sub SeleccionarPersona()
     Dim s As String
     s = lstPersonas.Value
 
-    ' Escribir sólo en C5 (no tocar A6 para no sobrescribir la fórmula)
-    With ThisWorkbook.Worksheets("tabla_control")
-        .Range("C5").Value = s
-    End With
+    ' Guardar en variables globales para que otros formularios lo usen
+    gSelectedPersonName = s
+    gSelectedPersonID = 0
+
+    ' Intentar obtener el persona_id desde la tabla "personal"
+    On Error Resume Next
+    Dim wsP As Worksheet
+    Dim tblP As ListObject
+    Dim foundP As Range
+    Set wsP = ThisWorkbook.Worksheets("personal")
+    Set tblP = wsP.ListObjects("personal")
+    On Error GoTo 0
+
+    If Not tblP Is Nothing Then
+        Set foundP = tblP.ListColumns("Apellidos y Nombres").DataBodyRange.Find(What:=s, LookAt:=xlWhole, MatchCase:=False)
+        If Not foundP Is Nothing Then
+            ' suponer que la columna de id se llama "persona_id"
+            gSelectedPersonID = CLng(tblP.DataBodyRange.Cells(foundP.Row - tblP.DataBodyRange.Row + 1, tblP.ListColumns("persona_id").Index).Value)
+        End If
+    End If
+
+    ' Escribir en C5 / refrescar solo si la bandera lo permite (comportamiento anterior)
+    If gBuscarPersona_WriteToC5 <> False Then
+        With ThisWorkbook.Worksheets("tabla_control")
+            .Range("C5").Value = s
+        End With
+
+        On Error Resume Next
+        Application.ScreenUpdating = False
+        RefreshTablaControl
+        Application.ScreenUpdating = True
+        On Error GoTo 0
+    End If
 
     Unload Me
 
-    ' Ejecutar refresco de la vista (llama a la macro que copia desde la tabla origen)
-    On Error Resume Next
-    Application.ScreenUpdating = False
-    RefreshTablaControl
-    Application.ScreenUpdating = True
-    On Error GoTo 0
-
 End Sub
-
 

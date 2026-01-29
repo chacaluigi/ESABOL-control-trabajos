@@ -217,3 +217,21 @@ ErrHandler:
     ' MsgBox "Error AplicarColorDiaEnTablaOrigen: " & Err.Description, vbExclamation
 End Sub
 
+
+' Devuelve persona_id por nombre exacto (o 0 si no encuentra)
+Public Function GetPersonaIDByName(personName As String) As Long
+    Dim wsP As Worksheet, tblP As ListObject, foundP As Range
+    On Error GoTo ErrHandler
+    Set wsP = ThisWorkbook.Worksheets("personal")
+    Set tblP = wsP.ListObjects("personal")
+    Set foundP = tblP.ListColumns("Apellidos y Nombres").DataBodyRange.Find(What:=personName, LookAt:=xlWhole, MatchCase:=False)
+    If Not foundP Is Nothing Then
+        GetPersonaIDByName = CLng(tblP.DataBodyRange.Cells(foundP.Row - tblP.DataBodyRange.Row + 1, tblP.ListColumns("persona_id").Index).Value)
+    Else
+        GetPersonaIDByName = 0
+    End If
+    Exit Function
+ErrHandler:
+    GetPersonaIDByName = 0
+End Function
+
