@@ -1,4 +1,23 @@
+VERSION 5.00
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmEditarTarea 
+   Caption         =   "EDITAR TAREA"
+   ClientHeight    =   3696
+   ClientLeft      =   -12
+   ClientTop       =   -216
+   ClientWidth     =   3276
+   OleObjectBlob   =   "frmEditarTarea.frx":0000
+   StartUpPosition =   2  'Centrar en pantalla
+End
+Attribute VB_Name = "frmEditarTarea"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
 Option Explicit
+
+Private Sub btnCerrar_Click()
+    Unload Me
+End Sub
 
 ' Asume que module3 tiene YEAR_REF, RecalcularTareaEnTabla, ActualizarDiaEnTablaOrigen, ActualizarTareaOrigen, ColorFromName, AplicarColorDiaEnTablaOrigen
 
@@ -21,7 +40,7 @@ Private Sub UserForm_Initialize()
         .AddItem "Verde oscuro"
         .AddItem "Gris"
         .AddItem "Verde claro"
-        .AddItem "CafÃ©"
+        .AddItem "Café"
         .ListIndex = 0 ' selecciona Amarillo por defecto
     End With
 
@@ -30,7 +49,7 @@ Private Sub UserForm_Initialize()
     Me.lblTotalPorc.Caption = "Total: 0%"
 End Sub
 
-' Llamar desde la hoja antes de .Show, o llamar SetupFromSheet despuÃ©s de asignar txtId, txtTarea, etc.
+' Llamar desde la hoja antes de .Show, o llamar SetupFromSheet después de asignar txtId, txtTarea, etc.
 Public Sub SetupFromSheet()
     Dim tareaId As Long
     Dim fechaIni As Variant, fechaFin As Variant, sumaPorc As Double
@@ -47,7 +66,7 @@ Public Sub SetupFromSheet()
     ' Mostrar porcentaje total
     Me.lblTotalPorc.Caption = "Total: " & Format(Round(sumaPorc, 0), "0") & "%"
 
-    ' Si la tarea alcanzÃ³ 100% o ya tiene fecha final -> marcar como terminada
+    ' Si la tarea alcanzó 100% o ya tiene fecha final -> marcar como terminada
     If Not IsEmpty(fechaFin) Or sumaPorc >= 100 Then
         Me.chkTerminado.Value = True
         ' Mostrar fecha final si hay
@@ -58,11 +77,11 @@ Public Sub SetupFromSheet()
         End If
     Else
         Me.chkTerminado.Value = False
-        ' Ocultar o limpiar fecha final si no estÃ¡ terminada
+        ' Ocultar o limpiar fecha final si no está terminada
         Me.txtFinal.Value = ""
     End If
 
-    ' Ajustar spinner por defecto: mostrar 0 (usuario elegirÃ¡)
+    ' Ajustar spinner por defecto: mostrar 0 (usuario elegirá)
     Me.spnPorcentaje.Value = 0
     Me.txtPorcentaje.Value = 0
 End Sub
@@ -76,20 +95,20 @@ Private Sub btnElegirFecha_Click()
     s = InputBox("Introduce la fecha (ej: 12-ene-2026) o escribe DD/MM/AAAA:", "Elegir fecha")
     If Trim(s) = "" Then Exit Sub
     If Not IsDate(s) Then
-        MsgBox "Fecha invÃ¡lida. Usa formato DD/MM/AAAA o 12-ene-2026", vbExclamation
+        MsgBox "Fecha inválida. Usa formato DD/MM/AAAA o 12-ene-2026", vbExclamation
         Exit Sub
     End If
     Dim d As Date
     d = CDate(s)
     If Year(d) <> YEAR_REF Then
-        If MsgBox("La fecha no pertenece al aÃ±o " & YEAR_REF & ". Â¿Continuar?", vbYesNo + vbQuestion) = vbNo Then Exit Sub
+        If MsgBox("La fecha no pertenece al año " & YEAR_REF & ". ¿Continuar?", vbYesNo + vbQuestion) = vbNo Then Exit Sub
     End If
     txtFecha.Value = Format(d, "d-mmm-yyyy")
     Call CargarValorDiaExistente(d)
 End Sub
 
 Private Sub CargarValorDiaExistente(d As Date)
-    ' intenta precargar el valor existente en la hoja de control para este tarea_id y dÃ­a
+    ' intenta precargar el valor existente en la hoja de control para este tarea_id y día
     On Error Resume Next
     Dim ws As Worksheet
     Dim tareaId As Long
@@ -131,7 +150,7 @@ Private Sub btnAgregarDia_Click()
     End If
 
     If Not IsDate(txtFecha.Value) Then
-        MsgBox "Fecha invÃ¡lida.", vbExclamation
+        MsgBox "Fecha inválida.", vbExclamation
         Exit Sub
     End If
 
@@ -139,7 +158,7 @@ Private Sub btnAgregarDia_Click()
     d = CDate(txtFecha.Value)
 
     If Year(d) <> YEAR_REF Then
-        If MsgBox("La fecha no pertenece al aÃ±o " & YEAR_REF & ". Â¿Desea continuar?", vbYesNo + vbQuestion) = vbNo Then Exit Sub
+        If MsgBox("La fecha no pertenece al año " & YEAR_REF & ". ¿Desea continuar?", vbYesNo + vbQuestion) = vbNo Then Exit Sub
     End If
 
     ' Preparar variables
@@ -157,9 +176,9 @@ Private Sub btnAgregarDia_Click()
     If Me.chkTerminado.Value = True Then
         pctToWrite = Application.WorksheetFunction.Max(0, 100 - sumaPorc)
     Else
-        ' Si no estÃ¡ marcado terminado, usar spinner
+        ' Si no está marcado terminado, usar spinner
         If Not IsNumeric(txtPorcentaje.Value) Then
-            MsgBox "Porcentaje invÃ¡lido.", vbExclamation
+            MsgBox "Porcentaje inválido.", vbExclamation
             Exit Sub
         End If
         pctToWrite = CDbl(txtPorcentaje.Value)
@@ -178,14 +197,14 @@ Private Sub btnAgregarDia_Click()
         ' Escribe porcentaje (si es 0 entonces dejar 0)
         Call ActualizarDiaEnTablaOrigen(tareaId, diaNum, pctToWrite)
     Else
-        ' No escribir valor, dejar celda vacÃ­a
+        ' No escribir valor, dejar celda vacía
         Call ActualizarDiaEnTablaOrigen(tareaId, diaNum, Empty)
     End If
 
     ' Aplicar color en la tabla origen
     Call AplicarColorDiaEnTablaOrigen(tareaId, diaNum, colorLong)
 
-    ' Si se marcÃ³ terminado, establecer FECHA FINAL (usar la fecha elegida)
+    ' Si se marcó terminado, establecer FECHA FINAL (usar la fecha elegida)
     If Me.chkTerminado.Value = True Then
         fechaFin = d
     End If
@@ -201,7 +220,7 @@ Private Sub btnAgregarDia_Click()
     Application.ScreenUpdating = True
     On Error GoTo 0
 
-    MsgBox "Avance del dÃ­a " & diaNum & " procesado (color: " & colorName & ").", vbInformation
+    MsgBox "Avance del día " & diaNum & " procesado (color: " & colorName & ").", vbInformation
 
     ' Actualizar UI con nuevos totales
     Me.lblTotalPorc.Caption = "Total: " & Format(Round(sumaPorc, 0), "0") & "%"
@@ -230,10 +249,12 @@ Private Sub btnGuardar_Click()
         Exit Sub
     End If
 
-    ' Guardar campos bÃ¡sicos
+    ' Guardar campos básicos
     fila.Offset(0, 1).Value = txtTarea.Value
 
-    ' Si estÃ¡ marcada como terminada -> fijar fecha final y porcentaje 100%
+    
+
+    ' Si está marcada como terminada -> fijar fecha final y porcentaje 100%
     If Me.chkTerminado.Value = True Then
         Dim finalDate As Variant
         If IsDate(Me.txtFinal.Value) Then
@@ -246,7 +267,7 @@ Private Sub btnGuardar_Click()
         fila.Offset(0, 3).Value = finalDate
         fila.Offset(0, 4).Value = 1 ' 100%
     Else
-        ' No terminada: mantener/limpiar fecha final segÃºn campo txtFinal
+        ' No terminada: mantener/limpiar fecha final según campo txtFinal
         If IsDate(txtFinal.Value) Then
             fila.Offset(0, 3).Value = CDate(txtFinal.Value)
         Else

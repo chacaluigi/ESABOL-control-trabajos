@@ -1,3 +1,12 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Hoja4"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
 Option Explicit
 
 Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean)
@@ -12,17 +21,10 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
         .txtId.Value = Target.Value
         .txtTarea.Value = Target.Offset(0, 1).Value
         .txtInicio.Value = Target.Offset(0, 2).Value
-        ' Asignar txtFinal solo si es una fecha v√°lida; si no, dejar vac√≠o
-        Dim vFinal As Variant
-        vFinal = Target.Offset(0, 3).Value
-        If IsDate(vFinal) Then
-            .txtFinal.Value = CDate(vFinal)
-        Else
-            .txtFinal.Value = ""
-        End If
+        .txtFinal.Value = Target.Offset(0, 3).Value
         .spnPorcentaje.Value = pct
         .txtPorcentaje.Value = pct
-        ' inicializar campo fecha vac√≠o (usuario elegir√°)
+        ' inicializar campo fecha vacÌo (usuario elegir·)
         .txtFecha.Value = ""
         ' cargar totales y estado desde la tabla origen
         .SetupFromSheet
@@ -39,7 +41,7 @@ Private Sub Worksheet_Change(ByVal Target As Range)
     Dim sumaPorc As Double
     Dim tareaId As Long
 
-    ' Columnas de d√≠as
+    ' Columnas de dÌas
     If Target.Column < COL_DIA_INICIO Or Target.Column > COL_DIA_FIN Then Exit Sub
     If Target.Row < 8 Then Exit Sub
 
@@ -60,8 +62,8 @@ Private Sub Worksheet_Change(ByVal Target As Range)
     ' guardar: actualiza FECHAS y PORCENTAJE en tabla origen
     ActualizarTareaOrigen tareaId, fechaIni, fechaFin, sumaPorc
 
-    ' y tambi√©n actualizar cada d√≠a en la tabla origen (sin iterar todo; actualizar solo la celda cambiada)
-    ' si Target es una sola celda y contiene n√∫mero >0 o 0, la guardamos
+    ' y tambiÈn actualizar cada dÌa en la tabla origen (sin iterar todo; actualizar solo la celda cambiada)
+    ' si Target es una sola celda y contiene n˙mero >0 o 0, la guardamos
     If Target.Cells.Count = 1 Then
         If IsNumeric(Target.Value) Then
             Dim diaNum As Long
@@ -70,7 +72,7 @@ Private Sub Worksheet_Change(ByVal Target As Range)
             ActualizarDiaEnTablaOrigen tareaId, diaNum, CDbl(Target.Value)
         End If
     Else
-        ' Si se pegaron varios d√≠as, sincronizamos todos (recorrer rango Target)
+        ' Si se pegaron varios dÌas, sincronizamos todos (recorrer rango Target)
         Dim cel As Range
         For Each cel In Intersect(Target, Range(Cells(8, COL_DIA_INICIO), Cells(Rows.Count, COL_DIA_FIN)))
             If IsNumeric(cel.Value) Then
