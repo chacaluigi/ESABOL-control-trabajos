@@ -1,14 +1,14 @@
-Attribute VB_Name = "Módulo3"
+Attribute VB_Name = "Mï¿½dulo3"
 Option Explicit
 
 Public Const YEAR_REF As Long = 2026
-Public Const COL_DIA_INICIO As Long = 7   ' G = día 1 en la hoja de control (solo referencia)
-Public Const COL_DIA_FIN As Long = 37     ' AK = día 31
+Public Const COL_DIA_INICIO As Long = 7   ' G = dï¿½a 1 en la hoja de control (solo referencia)
+Public Const COL_DIA_FIN As Long = 37     ' AK = dï¿½a 31
 Public Const SHEET_CONTROL As String = "tabla_control"
 Public Const SHEET_TAREAS As String = "tareas"
 Public Const TABLE_TAREAS_NAME As String = "tareas"
 ' --- Hoja / tabla puente (personal_tareas)
-Public Const SHEET_PT As String = "personal_tareas"      ' nombre de la hoja donde está la tabla puente
+Public Const SHEET_PT As String = "personal_tareas"      ' nombre de la hoja donde estï¿½ la tabla puente
 Public Const TABLE_PT_NAME As String = "personal_tareas" ' nombre del ListObject de la tabla puente
 
 
@@ -42,7 +42,7 @@ ErrHandler:
     MsgBox "Error en ActualizarTareaOrigen: " & Err.Description, vbExclamation
 End Sub
 
-' --- Actualiza la columna del día (1..31) en la tabla "tareas"
+' --- Actualiza la columna del dï¿½a (1..31) en la tabla "tareas"
 Public Sub ActualizarDiaEnTablaOrigen(tareaId As Long, dia As Long, valor As Variant)
     Dim wsT As Worksheet
     Dim tbl As ListObject
@@ -81,79 +81,100 @@ End Sub
 
 ' --- Recalcula FECHA INICIO / FECHA FINAL / PORCENTAJE leyendo directamente la fila de la tabla "tareas"
 ' devuelve por referencia fechaIni, fechaFin, sumaPorc (suma en porcentaje 0..100)
-Public Sub RecalcularTareaEnTabla(tareaId As Long, ByRef fechaIni As Variant, ByRef fechaFin As Variant, ByRef sumaPorc As Double)
+Public Sub RecalcularTareaEnTabla( _
+    tareaId As Long, _
+    ByRef fechaIni As Variant, _
+    ByRef fechaFin As Variant, _
+    ByRef sumaPorc As Double)
+
     Dim wsT As Worksheet
     Dim tbl As ListObject
-    Dim rngId As Range
     Dim filaTbl As Range
     Dim rowIndex As Long
     Dim dia As Long
     Dim idxCol As Long
     Dim val As Variant
+    Dim ultimaFecha As Variant
 
     fechaIni = Empty
     fechaFin = Empty
     sumaPorc = 0
+    ultimaFecha = Empty
 
-    On Error GoTo ErrHandler
     Set wsT = ThisWorkbook.Worksheets(SHEET_TAREAS)
     Set tbl = wsT.ListObjects(TABLE_TAREAS_NAME)
 
-    Set rngId = tbl.ListColumns("tarea_id").DataBodyRange
-    Set filaTbl = rngId.Find(What:=tareaId, LookAt:=xlWhole)
+    Set filaTbl = tbl.ListColumns("tarea_id").DataBodyRange.Find( _
+                    What:=tareaId, LookAt:=xlWhole)
 
     If filaTbl Is Nothing Then Exit Sub
 
-    ' calcular índice de fila relativo dentro de DataBodyRange
     rowIndex = filaTbl.Row - tbl.DataBodyRange.Row + 1
 
     For dia = 1 To 31
-        idxCol = tbl.ListColumns(CStr(dia)).Index ' índice relativo en tabla
+        idxCol = tbl.ListColumns(CStr(dia)).Index
         val = tbl.DataBodyRange.Cells(rowIndex, idxCol).Value
+
         If IsNumeric(val) And val > 0 Then
             If IsEmpty(fechaIni) Then
                 fechaIni = DateSerial(YEAR_REF, 1, dia)
             End If
-            fechaFin = DateSerial(YEAR_REF, 1, dia)
+
+            ultimaFecha = DateSerial(YEAR_REF, 1, dia)
             sumaPorc = sumaPorc + CDbl(val)
         End If
     Next dia
 
-    If sumaPorc > 100 Then sumaPorc = 100
-
-    Exit Sub
-ErrHandler:
-    MsgBox "Error en RecalcularTareaEnTabla: " & Err.Description, vbExclamation
+    If sumaPorc >= 100 Then
+        sumaPorc = 100
+        fechaFin = ultimaFecha
+    Else
+        fechaFin = Empty
+    End If
 End Sub
 
 
 ' Recalcula fecha inicio, fecha final y porcentaje (en la hoja de control) para una fila dada
 ' y retorna los valores por referencia
-Public Sub RecalcularFilaControl(ws As Worksheet, fila As Long, ByRef fechaIni As Variant, ByRef fechaFin As Variant, ByRef sumaPorc As Double)
+Public Sub RecalcularFilaControl( _
+    ws As Worksheet, _
+    fila As Long, _
+    ByRef fechaIni As Variant, _
+    ByRef fechaFin As Variant, _
+    ByRef sumaPorc As Double)
+
     Dim rngDias As Range, c As Range
-    Dim colInicio As Long, colFin As Long
+    Dim colInicio As Long
+    Dim ultimaFecha As Variant
 
     colInicio = COL_DIA_INICIO
-    colFin = COL_DIA_FIN
 
-    Set rngDias = ws.Cells(fila, colInicio).Resize(1, colFin - colInicio + 1)
+    Set rngDias = ws.Cells(fila, colInicio).Resize(1, 31)
 
     fechaIni = Empty
     fechaFin = Empty
     sumaPorc = 0
+    ultimaFecha = Empty
 
     For Each c In rngDias
         If IsNumeric(c.Value) And c.Value > 0 Then
             If IsEmpty(fechaIni) Then
                 fechaIni = DateSerial(YEAR_REF, 1, c.Column - colInicio + 1)
             End If
-            fechaFin = DateSerial(YEAR_REF, 1, c.Column - colInicio + 1)
+
+            ultimaFecha = DateSerial(YEAR_REF, 1, c.Column - colInicio + 1)
             sumaPorc = sumaPorc + CDbl(c.Value)
         End If
     Next c
 
-    If sumaPorc > 100 Then sumaPorc = 100
+    If sumaPorc >= 100 Then
+        sumaPorc = 100
+        fechaFin = ultimaFecha
+    Else
+        fechaFin = Empty
+    End If
 End Sub
+
 
 ' ------------------------
 ' Color utilities for tasks
@@ -161,27 +182,27 @@ End Sub
 Public Function ColorFromName(colorName As String) As Long
     Select Case LCase(Trim(colorName))
         Case "amarillo"
-            ColorFromName = RGB(255, 255, 0)        ' Días de trabajo
+            ColorFromName = RGB(255, 255, 0)        ' Dï¿½as de trabajo
         Case "rojo"
             ColorFromName = RGB(255, 0, 0)          ' Guardia entrante
         Case "naranja"
             ColorFromName = RGB(255, 192, 0)        ' Guardia saliente
         Case "celeste"
-            ColorFromName = RGB(0, 176, 240)      ' Vacación (light blue)
+            ColorFromName = RGB(0, 176, 240)      ' Vacaciï¿½n (light blue)
         Case "verde oscuro"
-            ColorFromName = RGB(196, 215, 155)          ' Comisión Vuelo (dark green)
+            ColorFromName = RGB(196, 215, 155)          ' Comisiï¿½n Vuelo (dark green)
         Case "gris"
-            ColorFromName = RGB(221, 297, 196)      ' Comisión varios (grey)
+            ColorFromName = RGB(221, 297, 196)      ' Comisiï¿½n varios (grey)
         Case "verde claro"
-            ColorFromName = RGB(0, 255, 0)      ' Día de permiso (light green)
-        Case "café", "cafe", "café "
+            ColorFromName = RGB(0, 255, 0)      ' Dï¿½a de permiso (light green)
+        Case "cafï¿½", "cafe", "cafï¿½ "
             ColorFromName = RGB(151, 71, 6)        ' Otros (brown)
         Case Else
             ColorFromName = xlNone                  ' sin color por defecto
     End Select
 End Function
 
-' Aplica color de fondo a la celda del día correspondiente en la tabla "tareas"
+' Aplica color de fondo a la celda del dï¿½a correspondiente en la tabla "tareas"
 Public Sub AplicarColorDiaEnTablaOrigen(tareaId As Long, dia As Long, colorLong As Long)
     Dim wsT As Worksheet
     Dim tbl As ListObject
