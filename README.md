@@ -18,3 +18,5 @@ DONE
 - Fecha final de la tarea mostrar solo cuando esta se seleccionó como terminada o esta alcanzó el 100%.
 - Si se coloca una opción diferente a "Días de trabajo (color amarillo)", colocar en porcentaje de avance del día vacío, solo el color que corresponde.
 - Colores exactos de los días.
+
+xlwings vba edit
